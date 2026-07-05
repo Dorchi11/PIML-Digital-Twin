@@ -1,8 +1,11 @@
+clc;
+clear;
+close all;
 %..................................................
 % to communicate the matlab with arduino
 %...................................................
 
-% --- Setup Serial Communication ---
+% Setup Serial Communication
 try
     arduino_port = 'COM3';  % Change to your port
     s = serialport(arduino_port, 115200);
@@ -12,17 +15,17 @@ catch
     error('Could not connect to Arduino. Check port!');
 end
 
-% --- Digital Twin Object ---
+% Digital Twin Object
 Ts = 0.01;  % 10ms sampling
 x0 = [0; 0];
 p0 = [0.5; 1.0];  % [damping; thrust_gain]
 dt = DigitalTwin(Ts, x0, p0);
 
-% --- Reference Trajectory ---
+% Reference Trajectory
 t = 0:Ts:10;
 r_trajectory = [0.5*sin(0.5*t); 0.5*cos(0.5*t)];
 
-% --- Real-time Loop ---
+% Real-time Loop
 numSteps = 1000;
 for k = 1:numSteps
     % 1. Read from Arduino
@@ -62,9 +65,9 @@ for k = 1:numSteps
     pause(Ts);
 end
 
-% --- Cleanup ---
+% Cleanup
 clear s;
 fprintf('Real-time simulation completed!\n');
 
-% --- Plot Results ---
+% Plot Results
 dt.plotResults();
