@@ -1,11 +1,13 @@
-
+///////////////////////////////////////////////////////////////////////////////////////////
 // to detect the data from sensor and handle the motor
 ////
 // Measure theta (angle) and omega (angular velocity)
 // Send measurements to MATLAB via Serial
 // Receive control input from MATLAB
 // Apply control to motor
+////
 // Dorchi Bhote 2026
+//////////////////////////////////////////////////////////////////////////////////////////
 
 #include <Wire.h>
 #include <MPU6050.h>
@@ -18,7 +20,6 @@
 #define ENCODER_B_PIN   3
 
 // objects
-
 MPU6050 mpu;
 
 // to define variables
@@ -51,7 +52,6 @@ void encoderISR() {
 }
 
 // to start setup
-
 void setup() {
     Serial.begin(115200);
     Serial.println("=== Project 4: Digital Twin Hardware ===");
@@ -79,7 +79,6 @@ void setup() {
 }
 
 // to start main loop
-
 void loop() {
     // --- 1. READ SENSORS ---
     readIMU();
