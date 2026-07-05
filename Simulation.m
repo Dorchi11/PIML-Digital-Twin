@@ -1,7 +1,11 @@
+clc;
+clear;
+close all;
 %...................................................................
 % to test the system in simulation and find the error without hard
 %...................................................................
 
+% Digital twin parameters
 % to setup the digital twin system
 Ts = 0.01;
 x = [0; 0];
