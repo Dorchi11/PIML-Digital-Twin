@@ -1,6 +1,7 @@
 clc;
 clear;
 close all;
+classdef DigitalTwin < handle
 %.............................................................
 % to design the algorithms for RLS and MPC
 %...........................................................
@@ -10,21 +11,21 @@ close all;
         
         % state parameters
         x = [0; 0];          % [theta; omega]
-        x_history = zeros(1,N_steps);   % Store states
-        u_history = zeros(1,N_steps);   % Store control inputs
+        x_history = [0; 0];   % Store states
+        u_history = 0;   % Store control inputs
+        p_histry = [0.5; 1.3];  % Store parameter history
+        
         
         % Parameters (adapted by RLS) 
-        p.damping = 0.5;  % inital guass
-        p.thrust_gain = 1.2;  % initial guass
-        p           % [damping; thrust_gain]
-        p_hat       % Estimated parameters
-        p_history   % Store parameter history
+        p = [0.5; 1.3];    % [damping; thrust_gain]
+        p_hat = [0.5; 1.3];   % Estimated parameters
+      
         
         % RLS algorithm
         % to estimate the output
         % to compute the error
         % to update the variables/parameters
-        theta_rls = [p.damping; p.thrust_gain];   % RLS parameter vector
+        theta_rls = [0.5; 1.3];   % RLS parameter vector
         P_rls = 1000*eye(2);       % RLS covariance matrix
         lambda_rls = 0.98;  % Forgetting factor (0.95-0.99)
         
@@ -32,39 +33,34 @@ close all;
         % to predict the future states
         % to select the optimal control input signal
         % to balance the target
-        Np = 10;          % Prediction horizon
-        Nc          % Control horizon
-        Q           % State weighting matrix
-        R           % Input weighting matrix
-        u_min       % Min control input
-        u_max       % Max control input
+        Np = 10;              % Prediction horizon
+        Nc = 3;               % Control horizon
+        Q = diag([10, 1]);    % State weighting matrix
+        R = 0.1;              % Input weighting matrix
+        u_min = 20;           % Min control input
+        u_max = 300;          % Max control input
+
+        % Physical constants parameter
+        J = 0.01;
+end
 
        % Start the function
        % to convert mathematical models into real-time actions
        % to set all variables
         function obj = DigitalTwin(Ts, x0, p0)
-            obj.Ts = Ts;
-            obj.x = x0;
-            obj.p = p0;
-            obj.p_hat = p0;
-            
-            % Initialize RLS
-            obj.theta_rls = p0;
-            obj.P_rls = 1e3 * eye(2);
-            obj.lambda_rls = 0.98;
-            
-            % Initialize MPC
-            obj.Np = 10;
-            obj.Nc = 3;
-            obj.Q = diag([10, 1]);
-            obj.R = 0.1;
-            obj.u_min = -20;
-            obj.u_max = 20;
-            
-            % Initialize history
-            obj.x_history = x0;
-            obj.u_history = 0;
-            obj.p_history = p0;
+        if nargin >= 1
+                obj.Ts = Ts;
+            end
+            if nargin >= 2
+                obj.x = x0;
+                obj.x_history = x0;
+            end
+            if nargin >= 3
+                obj.p = p0;
+                obj.p_hat = p0;
+                obj.theta_rls = p0;
+                obj.p_history = p0;
+            end
         end
         
         %..............................................................
@@ -88,13 +84,9 @@ close all;
             % This will call hybridThrustModel function
             thrust = obj.hybridThrustModel(u, thrust_gain);
             
-            % Moment of inertia (from your system)
-            J = 0.01;
-            
-            % Dynamics: theta_dot = omega
-            %          omega_dot = (1/J) * (thrust - damping * omega)
+            % Dynamics
             theta_dot = omega;
-            omega_dot = (1/J) * (thrust - damping * omega);
+            omega_dot = (1/obj.J) * (thrust - damping * omega);
             
             % Euler integration
             theta_next = theta + obj.Ts * theta_dot;
@@ -110,22 +102,12 @@ close all;
  
         [theta_new, P_new] = rls_Update(phi, y, theta, p, lamda);
             % Recursive Least Squares for online parameter adaptation
-            %
-            % Inputs:
-            %   x_current  - Current predicted state
-            %   u          - Control input
-            %   x_measured - Measured state (from Project 2)
-            % Outputs:
-            %   p_new      - Updated parameters [damping; thrust_gain]
+            omega = x_current(2);
             
             % Sensitivity matrix (Jacobian w.r.t parameters)
-            omega = x_current(2);
-            J = 0.01;
-            
-            % psi = [∂omega_dot/∂damping, ∂omega_dot/∂thrust_gain]
             psi = zeros(2, 2);
-            psi(2, 1) = -omega / J;     % Sensitivity to damping
-            psi(2, 2) = u^2 / J;        % Sensitivity to thrust_gain
+            psi(2, 1) = -omega / obj.J;    % Sensitivity to damping
+            psi(2, 2) = u^2 / obj.J;       % Sensitivity to thrust_gain
             
             % Prediction error (innovation)
             error = x_measured - x_current;
@@ -143,8 +125,6 @@ close all;
             obj.theta_rls = theta_new;
             obj.P_rls = P_new;
             obj.p_hat = theta_new;
-            
-            p_new = theta_new;
         end
         
         %................................................................
@@ -154,13 +134,6 @@ close all;
        
        u = mpc_Compute(obj, x0, r)
             % Model Predictive Control - computes optimal control input
-            %
-            % Inputs:
-            %   x0 - Current state
-            %   r  - Reference trajectory
-            % Output:
-            %   u_opt - Optimal control input
-            
             % Initial guess for control sequence
             u0 = zeros(obj.Nc, 1);
             
@@ -182,7 +155,8 @@ close all;
             u_opt = u_opt(1);
         end
         
-        %% MPC Cost Function
+        % MPC Cost Function
+        % to assign numerical weights for control goal
         function J = mpcCost(obj, x0, u_seq, r)
             J = 0;
             x = x0;
@@ -194,14 +168,18 @@ close all;
                     u = u_seq(end);
                 end
                 
+                % to predict next state
                 x = obj.predictState(x, u, obj.p_hat);
+
+                % to compute error if reference exists
+                if k <= size(r, 2)
                 e = x - r(:, k);
                 J = J + e' * obj.Q * e + obj.R * u^2;
             end
         end
+   end
         
         % to define the constraints for mpc
-        
         function [c, ceq] = mpcConstraints(~, ~, ~)
             c = [];
             ceq = [];
@@ -228,7 +206,7 @@ close all;
         % to ensure prediction,optimisations, and parameter updates
         % to allow RLS, MPC, amd estate estimators
        
-        function runSimulation(obj, numSteps, r_trajectory, observer, controller)
+        function runSimulation(obj, numSteps, r, observer, controller)
             % Main control loop for simulation mode
             % This uses Project 1 (controller) and Project 2 (observer)
             %
@@ -238,37 +216,57 @@ close all;
             %   observer     - Project 2: EKF observer
             %   controller   - Project 1: PID controller
             
-            fprintf('\n=== Project 4: Digital Twin Simulation ===\n');
+            fprintf('\n Project 4: Digital Twin Simulation ===\n');
+            fprintf('\n');
+            fprintf('  Steps: %d\n', numSteps);
+            fprintf('  Ts:    %.3f s\n', obj.Ts);
+            fprintf('  RLS λ: %.2f\n', obj.lambda_rls);
+            fprintf('  MPC Np: %d, Nc: %d\n', obj.Np, obj.Nc);
+            fprintf('\n\n');
+            
+            fprintf('Progress: ');
+            
             
             for k = 1:numSteps
-                % --- Get reference ---
-                r = r_trajectory(:, k);
+             % Progress indicator
+                if mod(k, floor(numSteps/20)) == 0
+                    fprintf('.');
+                end
                 
-                % --- Get measurement from Project 2 (observer) ---
+                % to get reference 
+               if k <= size(r, 2)
+                    r = r(:, k);
+                else
+                    r = r(:, end);
+                end
+                
+               % Get measurement from observer (Project 2)
                 y = observer.getEstimate();
                 
-                % --- Compute control using Project 1 (controller) ---
+                % Compute control using PID controller (Project 1)
                 u = controller.compute(r, y);
                 
-                % --- Update Digital Twin (RLS Adaptation) ---
+                % Update Digital Twin (RLS Adaptation)
                 x_pred = obj.predictState(obj.x, u, obj.p_hat);
                 [p_new, ~, ~] = obj.rlsUpdate(x_pred, u, y);
                 obj.p_hat = p_new;
                 
-                % --- MPC (optional - can use instead of PID) ---
-                % u_mpc = obj.mpcCompute(obj.x, r_trajectory(:, k:k+obj.Np));
-                
-                % --- Update Digital Twin state ---
+                % Update Digital Twin state
                 obj.x = obj.predictState(obj.x, u, obj.p_hat);
                 
-                % --- Store history ---
+                % Store history
                 obj.x_history = [obj.x_history, obj.x];
                 obj.u_history = [obj.u_history, u];
                 obj.p_history = [obj.p_history, p_new];
                 obj.t_current = obj.t_current + obj.Ts;
             end
             
-            fprintf('Simulation Completed!\n');
+            fprintf('\n\n\n');
+            fprintf('  Simulation Completed!\n');
+            fprintf('  Final Parameters:\n');
+            fprintf('    Damping:     %.4f\n', obj.p_hat(1));
+            fprintf('    Thrust Gain: %.4f\n', obj.p_hat(2));
+            fprintf('\n');
         end
         
         %...........................................................
@@ -280,34 +278,129 @@ close all;
             figure('Position', [100, 100, 1200, 600]);
             
             % States parameters
+            % Subplot 1: Theta (Angle)
             subplot(2,3,1);
             plot(obj.x_history(1,:), 'b-', 'LineWidth', 1.5);
-            title('Theta (Angle)'); xlabel('Step'); ylabel('rad');
+            title('\theta (Angle)', 'FontSize', 12);
+            xlabel('Time Step'); ylabel('rad');
             grid on;
             
+            % Subplot 2: Omega (Velocity)
             subplot(2,3,2);
             plot(obj.x_history(2,:), 'r-', 'LineWidth', 1.5);
-            title('Omega (Velocity)'); xlabel('Step'); ylabel('rad/s');
+            title('\omega (Angular Velocity)', 'FontSize', 12);
+            xlabel('Time Step'); ylabel('rad/s');
             grid on;
             
-            % Adapted parameters
+            % Subplot 3: Adapted Parameters
             subplot(2,3,3);
             plot(obj.p_history(1,:), 'g-', 'LineWidth', 1.5); hold on;
             plot(obj.p_history(2,:), 'm-', 'LineWidth', 1.5);
-            title('Adapted Parameters (RLS)');
-            xlabel('Step'); ylabel('Value');
-            legend('Damping', 'Thrust Gain');
+            plot([1, length(obj.p_history)], [obj.p(1), obj.p(1)], 'g--', 'LineWidth', 1);
+            plot([1, length(obj.p_history)], [obj.p(2), obj.p(2)], 'm--', 'LineWidth', 1);
+            title('Parameter Adaptation (RLS)', 'FontSize', 12);
+            xlabel('Time Step'); ylabel('Value');
+            legend('Damping (est)', 'Thrust Gain (est)', ...
+                   'Damping (true)', 'Thrust Gain (true)', ...
+                   'Location', 'best');
             grid on;
             
-            % Control input parameters
+            % Subplot 4: Control Input
             subplot(2,3,4);
             plot(obj.u_history, 'k-', 'LineWidth', 1.5);
-            title('Control Input');
-            xlabel('Step'); ylabel('u');
+            title('Control Input', 'FontSize', 12);
+            xlabel('Time Step'); ylabel('u');
             grid on;
             
-            sgtitle('Project 4: Digital Twin Results');
+            % Subplot 5: Phase Portrait
+            subplot(2,3,5);
+            plot(obj.x_history(1,:), obj.x_history(2,:), 'b-', 'LineWidth', 1);
+            hold on;
+            plot(obj.x_history(1,1), obj.x_history(2,1), 'go', 'MarkerSize', 10, 'MarkerFaceColor', 'g');
+            plot(obj.x_history(1,end), obj.x_history(2,end), 'ro', 'MarkerSize', 10, 'MarkerFaceColor', 'r');
+            title('Phase Portrait', 'FontSize', 12);
+            xlabel('\theta (rad)'); ylabel('\omega (rad/s)');
+            legend('Trajectory', 'Start', 'End', 'Location', 'best');
+            grid on;
+            
+            % Subplot 6: Parameter Error
+            subplot(2,3,6);
+            damping_error = obj.p_history(1,:) - obj.p(1);
+            thrust_error = obj.p_history(2,:) - obj.p(2);
+            plot(damping_error, 'g-', 'LineWidth', 1.5); hold on;
+            plot(thrust_error, 'm-', 'LineWidth', 1.5);
+            plot([1, length(obj.p_history)], [0, 0], 'k--', 'LineWidth', 1);
+            title('Parameter Estimation Error', 'FontSize', 12);
+            xlabel('Time Step'); ylabel('Error');
+            legend('Damping Error', 'Thrust Gain Error', 'Location', 'best');
+            grid on;
+            
+            sgtitle('Project 4: Digital Twin Simulation Results', 'FontSize', 14, 'FontWeight', 'bold');
         end
-      
-
+        
+        % ................................................................
+        % Export Data
+        % to write workspace variables for offline analysis
+        function exportData(obj, filename)
+            % EXPORTDATA Export simulation data to MAT file
+            
+            if nargin < 2
+                filename = 'digital_twin_data.mat';
+            end
+            
+            data.Ts = obj.Ts;
+            data.t_current = obj.t_current;
+            data.x_history = obj.x_history;
+            data.u_history = obj.u_history;
+            data.p_history = obj.p_history;
+            data.p_true = obj.p;
+            data.p_final = obj.p_hat;
+            data.lambda_rls = obj.lambda_rls;
+            data.Np = obj.Np;
+            data.Nc = obj.Nc;
+            
+            save(filename, 'data');
+            fprintf('Data exported to: %s\n', filename);
+        end
+        
+        % ................................................................
+        % Reset Simulation
+        % to reinitialise the parameters for next start
+        function reset(obj, x0, p0)
+           % RESET Reset the digital twin to initial conditions
+            
+            if nargin < 2
+                x0 = [0; 0];
+            end
+            if nargin < 3
+                p0 = obj.p_hat;
+            end
+            
+            obj.x = x0;
+            obj.x_history = x0;
+            obj.u_history = 0;
+            obj.p_history = p0;
+            obj.p_hat = p0;
+            obj.theta_rls = p0;
+            obj.t_current = 0;
+        end
+        
+        % ...............................................................
+        % Display Object Information
+        % to update numerical readouts and warning flags during the runtime
+        function disp(obj)
+            % DISP Display digital twin information
+            
+            fprintf('Different Object (Digital Twin)\n');
+            fprintf('\n');
+            fprintf('  Sampling Time (Ts): %.3f s\n', obj.Ts);
+            fprintf('  Current Time:       %.3f s\n', obj.t_current);
+            fprintf('  State (x):          [%.3f, %.3f]\n', obj.x(1), obj.x(2));
+            fprintf('  Parameters (p_hat): [%.3f, %.3f]\n', obj.p_hat(1), obj.p_hat(2));
+            fprintf('  RLS Lambda:         %.3f\n', obj.lambda_rls);
+            fprintf('  MPC Np/Nc:          %d/%d\n', obj.Np, obj.Nc);
+            fprintf\n');
+        end
+    end
+end
  
