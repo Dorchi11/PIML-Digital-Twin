@@ -1,28 +1,37 @@
+clc;
+clear;
+close all;
 %.............................................................
 % to design the algorithms for RLS and MPC
 %...........................................................
-% --- Time ---
+% time parameters
         Ts = 0.01;  % Sampling time
         t_current = 10;  % Current simulation time
         
-        % --- States ---
+        % state parameters
         x = [0; 0];          % [theta; omega]
         x_history = zeros(1,N_steps);   % Store states
         u_history = zeros(1,N_steps);   % Store control inputs
         
-        % --- Parameters (adapted by RLS) ---
+        % Parameters (adapted by RLS) 
         p.damping = 0.5;  % inital guass
         p.thrust_gain = 1.2;  % initial guass
         p           % [damping; thrust_gain]
         p_hat       % Estimated parameters
         p_history   % Store parameter history
         
-        % --- RLS (Algorithm 1) ---
+        % RLS algorithm
+        % to estimate the output
+        % to compute the error
+        % to update the variables/parameters
         theta_rls = [p.damping; p.thrust_gain];   % RLS parameter vector
         P_rls = 1000*eye(2);       % RLS covariance matrix
         lambda_rls = 0.98;  % Forgetting factor (0.95-0.99)
         
-        % --- MPC (Algorithm 2) ---
+        % MPC algorithm
+        % to predict the future states
+        % to select the optimal control input signal
+        % to balance the target
         Np = 10;          % Prediction horizon
         Nc          % Control horizon
         Q           % State weighting matrix
@@ -30,9 +39,9 @@
         u_min       % Min control input
         u_max       % Max control input
 
-    
-    methods
-       % to start the function
+       % Start the function
+       % to convert mathematical models into real-time actions
+       % to set all variables
         function obj = DigitalTwin(Ts, x0, p0)
             obj.Ts = Ts;
             obj.x = x0;
@@ -59,9 +68,11 @@
         end
         
         %..............................................................
-        % algorithm 1: State Prediction (Physics Model)
-
-        x_next = x+Ts*f(x, u, p);
+        % State Prediction physical model
+        % to predict and update the time using mathematical model and current inputs
+        % to calculate the difference between actual measurement and predicted output using new sensor data
+        
+            x_next = x+Ts*f(x, u, p);
             % Uses the hybrid thrust model from Project 3
             % This is the physics-informed core of the digital twin
             
@@ -93,7 +104,9 @@
         end
         
         %...............................................................
-        % algorithm 2: RLS Parameter Adaptation
+        % RLS Parameter Adaptation function
+        % to compute the adaptive gain vector
+        % to apply the forgetting factor
  
         [theta_new, P_new] = rls_Update(phi, y, theta, p, lamda);
             % Recursive Least Squares for online parameter adaptation
@@ -135,7 +148,9 @@
         end
         
         %................................................................
-        %  ALGORITHM 3: Model Predictive Control
+        % Model Predictive Control function
+        % to calculate the optimal future voltage/current sequence
+        % to apply the constraints
        
        u = mpc_Compute(obj, x0, r)
             % Model Predictive Control - computes optimal control input
@@ -209,7 +224,9 @@
         end
         
         %...............................................................
-        % main control loop (Simulation Mode)
+        % Main control loop 
+        % to ensure prediction,optimisations, and parameter updates
+        % to allow RLS, MPC, amd estate estimators
        
         function runSimulation(obj, numSteps, r_trajectory, observer, controller)
             % Main control loop for simulation mode
@@ -255,12 +272,14 @@
         end
         
         %...........................................................
-        % plotting
+        % plottingt
+        % to validate the model accuracy
+        % to reveal oscillations, overshoot, and settling time
        
         function plotResults(obj)
             figure('Position', [100, 100, 1200, 600]);
             
-            % States
+            % States parameters
             subplot(2,3,1);
             plot(obj.x_history(1,:), 'b-', 'LineWidth', 1.5);
             title('Theta (Angle)'); xlabel('Step'); ylabel('rad');
@@ -280,7 +299,7 @@
             legend('Damping', 'Thrust Gain');
             grid on;
             
-            % Control input
+            % Control input parameters
             subplot(2,3,4);
             plot(obj.u_history, 'k-', 'LineWidth', 1.5);
             title('Control Input');
