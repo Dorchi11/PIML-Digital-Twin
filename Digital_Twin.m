@@ -121,26 +121,36 @@ classdef Digital_Twin < handle
             % Prediction error (innovation) - y is measured output
             error = y - x;
 
-            % Regularization for numerical stability
-            reg = 1e-6
+           % Regularization for numerical stability
+            reg = 0.1;
             
             % Kalman gain for RLS
-            K = obj.P_rls * psi' / (psi * obj.P_rls * psi' + 1);
-            
+            denom = psi * obj.P_rls * psi' + reg + 1;
+            K = obj.P_rls * psi' / denom;
+
             % Update parameters
             theta_new = obj.theta_rls + K * error;
             
             % Update covariance (with forgetting factor)
             P_new = (1/obj.lambda_rls) * (obj.P_rls - K * psi * obj.P_rls);
             
-           % Ensure symmetry and positive definiteness
+            % Ensure symmetry and positive definiteness
             P_new = (P_new + P_new') / 2;
+
+            % Add regularization
+            P_new = P_new + reg * eye(2);
+    
+            % Clamp P_rls to prevent explosion
+            P_new = min(P_new, 0.1 * eye(2));
+            P_new = max(P_new, 0.0001 * eye(2))
+    
             
             % Store for next iteration
             obj.theta_rls = theta_new;
             obj.P_rls = P_new;
             obj.p_hat = theta_new;
         end
+        
         
         %.............................................................
         % 4. Real-Time Control: Model Predictive Control (MPC)
