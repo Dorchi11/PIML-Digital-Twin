@@ -150,8 +150,7 @@ classdef Digital_Twin < handle
             obj.P_rls = P_new;
             obj.p_hat = theta_new;
         end
-        
-        
+              
         %.............................................................
         % 4. Real-Time Control: Model Predictive Control (MPC)
         %    to calculate the optimal future control sequence
