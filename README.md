@@ -1,29 +1,41 @@
-# Physics-Informed-Digital-Twin
-Adaptive simulation model for prediction, fault detection, and model predictive control
-# Physics-Informed Digital Twin
+Physics-Informed Digital Twin for Real-Time Control of a Rotor Balance Platform
+A Physics-Informed Digital Twin for Real-Time Control of a Rotor Balance Platform
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![MATLAB](https://img.shields.io/badge/MATLAB-R2023a-blue.svg)](https://www.mathworks.com/products/matlab.html)
-[![GitHub stars](https://img.shields.io/github/stars/your-username/Physics-Informed-Digital-Twin)](https://github.com/your-username/Physics-Informed-Digital-Twin/stargazers)
+Adaptive simulation model for prediction, fault detection, and model predictive control — integrating PID, PIML, Neural Network, and RLS on a Teensy 4.1 embedded platform with MPU6050 IMU and BLDC actuators.
 
-## 📖 Overview
+https://img.shields.io/badge/License-MIT-yellow.svg
+https://img.shields.io/badge/MATLAB-R2024b-blue
+https://img.shields.io/github/stars/Dorchi11/Digital-Twin?style=social
 
-A **Physics-Informed Digital Twin** implementation for a self-balancing twin rotor system. This project combines:
+📖 Overview
+A Physics-Informed Digital Twin implementation for a self-balancing twin rotor system. This project combines:
 
-- 🎯 **MPC** (Model Predictive Control) for optimal trajectory tracking
-- 🔄 **RLS** (Recursive Least Squares) for online parameter estimation
-- ⚡ **PID** control with adaptive gains
-- 🧮 **Physics-based** modeling of twin rotor dynamics
-- 📊 **Real-time** simulation and visualization
+⚡ PID Control with adaptive gains
 
-## ✨ Features
+🔄 RLS (Recursive Least Squares) for online parameter estimation
 
-- ✅ Real-time parameter estimation using RLS
-- ✅ Model Predictive Control with constraints
-- ✅ Adaptive PID control
-- ✅ Physics-based state prediction
-- ✅ Comprehensive simulation environment
-- ✅ Visualization and analysis tools
-- ✅ MATLAB integration with Arduino
+🧠 PIML (Physics-Informed Machine Learning) with a neural network for residual correction
 
-## 🏗️ Project Structure
+🧮 Physics-Based Modeling of twin rotor dynamics
+
+📊 Real-Time Simulation and visualization
+
+✨ Features
+✅ Adaptive PID control
+
+✅ Real-time parameter estimation using RLS
+
+✅ Physics-Informed Neural Network (PIML) for residual learning
+
+✅ Physics-based state prediction
+
+✅ Comprehensive simulation environment (MATLAB/Simulink)
+
+✅ Visualization and analysis tools
+
+✅ MATLAB integration with Teensy 4.1
+
+✅ MPU6050 IMU for attitude estimation
+
+✅ BLDC motor + ESC actuation with differential thrust
+
