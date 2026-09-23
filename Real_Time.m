@@ -1,11 +1,9 @@
 clc;
 clear;
 close all;
-%....................................................................
-% to run and demonstrate the system with real hardware
-%.....................................................................
-
+%% to run and demonstrate the system with real hardware
 % to setup the variables
+
 Ts = 0.02;
 x0 = [0; 0];
 p0 = [0.1; 0.5];
@@ -20,14 +18,13 @@ arduino = setupArduino(port);
 % Reference
 theta_ref = 0.5;
 
-fprintf('\n=== Project 4: Real-Time Digital Twin ===\n');
-fprintf('Press Ctrl+C to stop\n\n');
+fprintf('\ Real-Time Digital Twin\n');
 
-% to run the main loop
+%% to run the main loop
 try
     k = 1;
     while true
-        % Read sensor (Project 2 interface)
+        % Read sensor 
         y = readSensor(arduino);
         
         % PID Control (Project 1 interface)
