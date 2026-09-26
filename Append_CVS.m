@@ -17,7 +17,6 @@ if isfile(csvFile)
 end
 
 %% Write header 
-
 header = {'U_real','Theta_real','Omega_real','Theta_phy', 'Omega_phy'};
 writecell(header, csvFile);
 simulationNo = 0;
@@ -63,12 +62,10 @@ for i = 1:length(refSet)
             Theta_ref = theta_ref * ones(n, 1);
             
             %% Build table 
-           
             T = table(U_real, Theta_real, Omega_real, Theta_phy, Omega_phy, ...
             'VariableNames', {'U_real','Theta_real','Omega_real','Theta_phy', 'Omega_phy'});
             
             %% Append to CSV
-
             writetable(T, csvFile,'WriteMode','append','WriteVariableNames',false);
             fprintf("Simulation number: %d \n",simulationNo)
             
@@ -77,7 +74,6 @@ for i = 1:length(refSet)
 end
 
 %% Display results
-
 disp('All runs complete!');
 disp(['Saved: ' csvFile]);
 winopen(csvFile);
