@@ -1,4 +1,5 @@
-🚁 Physics-Informed Digital Twin for Nonlinear System
+Physics-Informed Digital Twin for Nonlinear System
+
 
 Adaptive simulation model for prediction, fault detection, and model predictive control — integrating PID, PIML, Neural Network, and RLS on a Teensy 4.1 embedded platform with MPU6050 IMU and BLDC actuators.
 
