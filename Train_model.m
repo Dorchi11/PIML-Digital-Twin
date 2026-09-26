@@ -6,13 +6,13 @@ close all;
 % Read Data
 data = readtable('dataset.csv');
 
-% Input Features
+%% Input Features
 X = [data.U_real, data.Theta_phy, data.Omega_phy];
 
 deltaTheta = data.Theta_real - data.Theta_phy;
 deltaOmega = data.Omega_real - data.Omega_phy;
 
-% Target Output
+%% Target Output
 Y = [deltaTheta, deltaOmega];
 
 %% Train NN model 
