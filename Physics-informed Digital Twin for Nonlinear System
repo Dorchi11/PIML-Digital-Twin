@@ -2,10 +2,6 @@
 
 Adaptive simulation model for prediction, fault detection, and model predictive control — integrating PID, PIML, Neural Network, and RLS on a Teensy 4.1 embedded platform with MPU6050 IMU and BLDC actuators.
 
-https://img.shields.io/badge/License-MIT-yellow.svg
-https://img.shields.io/badge/MATLAB-R2024b-blue
-https://img.shields.io/github/stars/Dorchi11/Digital-Twin?style=social
-
 📖 Overview
 A Physics-Informed Digital Twin implementation for a self-balancing twin rotor system. This project combines:
 
