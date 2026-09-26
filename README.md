@@ -1,9 +1,6 @@
 # Physics-Informed Digital Twin for Nonlinear System
 <img width="286" height="282" alt="image" src="https://github.com/user-attachments/assets/e5fe1b0e-47df-48f5-8279-5e8632c35e0c" /> <img width="264" height="156" alt="image" src="https://github.com/user-attachments/assets/c7b82a50-280e-49bd-af18-2fa538e9a44c" />
 
-
-Adaptive simulation model for prediction, fault detection, and model predictive control — integrating PID, PIML, Neural Network, and RLS on a Teensy 4.1 embedded platform with MPU6050 IMU and BLDC actuators.
-
 Adaptive simulation model for prediction, fault detection, and model predictive control — integrating PID, PIML, Neural Network, and RLS on a Teensy 4.1 embedded platform with MPU6050 IMU and BLDC actuators.
 
 📖 Overview
